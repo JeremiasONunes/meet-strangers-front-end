@@ -19,14 +19,14 @@ export default function ChatRoom() {
                     </div>
 
                     {/* Vídeo local (miniatura) */}
-                    <div className="absolute bottom-4 right-4 w-32 h-24 rounded-xl overflow-hidden border-2 border-white shadow-lg">
+                    <div className="absolute bottom-4 right-4 w-48 h-48 rounded-xl overflow-hidden border-2 border-white shadow-lg">
                         <VideoChat type="local" isMuted={isMuted} cameraOn={cameraOn} />
                     </div>
                 </div>
 
                 {/* Área lateral: Chat + Controles */}
                 <div className="w-full lg:w-[350px] flex flex-col gap-4 rounded-2xl bg-black/40 p-4 shadow-xl">
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="h-[600px]">
                         <ChatBox />
                     </div>
 

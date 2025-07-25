@@ -29,9 +29,11 @@ export default function ChatBox() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Área das mensagens */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scroll">
+
+
         {messages.map(msg => (
           <div
             key={msg.id}
