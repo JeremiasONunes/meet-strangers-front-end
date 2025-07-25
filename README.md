@@ -130,7 +130,7 @@ Nenhum dado pessoal é coletado ou armazenado em servidores. Toda comunicação 
 ## 👤 Autor
 
 **Jeremias Maya**  
-[GitHub](https://github.com/seu-usuario) | [LinkedIn](https://www.linkedin.com/in/seu-perfil)
+[GitHub](https://github.com/seu-usuario) | [LinkedIn](https://www.linkedin.com/in/jeremiasonunes/)
 
 ---
 
