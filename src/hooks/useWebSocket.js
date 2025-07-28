@@ -13,7 +13,7 @@ export function useWebSocket(username) {
   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
   useEffect(() => {
-    // Inicia captura do stream local assim que o hook inicia
+    // 1. Iniciar stream local logo ao entrar
     async function initLocalStream() {
       try {
         localStream.current = await navigator.mediaDevices.getUserMedia({
@@ -48,6 +48,7 @@ export function useWebSocket(username) {
           setStatus("matched");
           setPartnerName(data.name);
 
+          // 2. Só criar conexão aqui, usando o localStream já criado
           if (!peerConnection.current) {
             await startWebRTC(true); // iniciar offerer
           }
@@ -91,7 +92,7 @@ export function useWebSocket(username) {
   async function startWebRTC(isOfferer) {
     peerConnection.current = new RTCPeerConnection(servers);
 
-    // Se localStream ainda não existir, tenta criar
+    // Usa o localStream já criado (aguarda caso ainda não tenha)
     if (!localStream.current) {
       try {
         localStream.current = await navigator.mediaDevices.getUserMedia({
@@ -100,9 +101,11 @@ export function useWebSocket(username) {
         });
       } catch (err) {
         console.error("Erro ao acessar mídia local:", err);
+        return;
       }
     }
 
+    // Adiciona as tracks na conexão
     localStream.current.getTracks().forEach((track) => {
       peerConnection.current.addTrack(track, localStream.current);
     });
@@ -167,14 +170,14 @@ export function useWebSocket(username) {
       peerConnection.current.close();
       peerConnection.current = null;
     }
-    if (localStream.current) {
-      localStream.current.getTracks().forEach((t) => t.stop());
-      localStream.current = null;
-    }
+    // NÃO parar localStream aqui para continuar mostrando a câmera local
+    // if (localStream.current) {
+    //   localStream.current.getTracks().forEach((t) => t.stop());
+    //   localStream.current = null;
+    // }
     setRemoteStream(null);
   }
 
-  // Função para parar o stream local (útil para desligar câmera)
   function stopLocalStream() {
     if (localStream.current) {
       localStream.current.getTracks().forEach(track => track.stop());
@@ -190,6 +193,6 @@ export function useWebSocket(username) {
     localStream: localStream.current,
     remoteStream,
     isConnected: status === "matched",
-    stopLocalStream,  // exporta a função para usar fora
+    stopLocalStream,
   };
 }
