@@ -13,6 +13,20 @@ export function useWebSocket(username) {
   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
   useEffect(() => {
+    // Inicia captura do stream local assim que o hook inicia
+    async function initLocalStream() {
+      try {
+        localStream.current = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+      } catch (err) {
+        console.error("Erro ao acessar mídia local:", err);
+      }
+    }
+
+    initLocalStream();
+
     ws.current = new WebSocket("wss://meet-strangers-back-end.onrender.com");
 
     ws.current.onopen = () => {
@@ -77,10 +91,17 @@ export function useWebSocket(username) {
   async function startWebRTC(isOfferer) {
     peerConnection.current = new RTCPeerConnection(servers);
 
-    localStream.current = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
+    // Se localStream ainda não existir, tenta criar
+    if (!localStream.current) {
+      try {
+        localStream.current = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+      } catch (err) {
+        console.error("Erro ao acessar mídia local:", err);
+      }
+    }
 
     localStream.current.getTracks().forEach((track) => {
       peerConnection.current.addTrack(track, localStream.current);
