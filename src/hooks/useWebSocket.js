@@ -3,23 +3,24 @@ import { useEffect, useRef, useState } from "react";
 export function useWebSocket(username) {
   const ws = useRef(null);
   const peerConnection = useRef(null);
-  const localStream = useRef(null);
-
-  const [status, setStatus] = useState("connecting"); // connecting, waiting, matched, disconnected
+  const localStreamRef = useRef(null); // ref interna para manipular
+  const [localStream, setLocalStream] = useState(null); // reativo para UI
+  const [remoteStream, setRemoteStream] = useState(null);
+  const [status, setStatus] = useState("connecting");
   const [partnerName, setPartnerName] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [remoteStream, setRemoteStream] = useState(null);
 
   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
   useEffect(() => {
-    // 1. Iniciar stream local logo ao entrar
     async function initLocalStream() {
       try {
-        localStream.current = await navigator.mediaDevices.getUserMedia({
+        const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
         });
+        localStreamRef.current = stream;
+        setLocalStream(stream);
       } catch (err) {
         console.error("Erro ao acessar mídia local:", err);
       }
@@ -27,7 +28,7 @@ export function useWebSocket(username) {
 
     initLocalStream();
 
-    ws.current = new WebSocket("wss://meet-strangers-back-end.onrender.com");
+    ws.current = new WebSocket("ws://localhost:3000");
 
     ws.current.onopen = () => {
       console.log("WebSocket conectado");
@@ -47,10 +48,8 @@ export function useWebSocket(username) {
         case "match":
           setStatus("matched");
           setPartnerName(data.name);
-
-          // 2. Só criar conexão aqui, usando o localStream já criado
           if (!peerConnection.current) {
-            await startWebRTC(true); // iniciar offerer
+            await startWebRTC(true); // você é o offerer
           }
           break;
 
@@ -92,50 +91,42 @@ export function useWebSocket(username) {
   async function startWebRTC(isOfferer) {
     peerConnection.current = new RTCPeerConnection(servers);
 
-    // Usa o localStream já criado (aguarda caso ainda não tenha)
-    if (!localStream.current) {
-      try {
-        localStream.current = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-      } catch (err) {
-        console.error("Erro ao acessar mídia local:", err);
-        return;
-      }
+    // Aguarda o localStream ficar pronto
+    while (!localStreamRef.current) {
+      await new Promise((res) => setTimeout(res, 100));
     }
 
-    // Adiciona as tracks na conexão
-    localStream.current.getTracks().forEach((track) => {
-      peerConnection.current.addTrack(track, localStream.current);
+    localStreamRef.current.getTracks().forEach((track) => {
+      peerConnection.current.addTrack(track, localStreamRef.current);
     });
 
     peerConnection.current.ontrack = (event) => {
       const [stream] = event.streams;
+      console.log("Track recebida do parceiro.");
       setRemoteStream(stream);
     };
 
     peerConnection.current.onicecandidate = (event) => {
       if (event.candidate) {
-        ws.current.send(
-          JSON.stringify({ type: "signal", candidate: event.candidate })
-        );
+        ws.current.send(JSON.stringify({ type: "signal", candidate: event.candidate }));
       }
     };
 
     if (isOfferer) {
       const offer = await peerConnection.current.createOffer();
       await peerConnection.current.setLocalDescription(offer);
-
-      ws.current.send(
-        JSON.stringify({ type: "signal", sdp: peerConnection.current.localDescription })
-      );
+      ws.current.send(JSON.stringify({ type: "signal", sdp: peerConnection.current.localDescription }));
     }
   }
 
   async function handleSignal(data) {
     if (!peerConnection.current) {
-      await startWebRTC(false);
+      await startWebRTC(false); // responder
+    }
+
+    // Aguarda o localStream ficar pronto
+    while (!localStreamRef.current) {
+      await new Promise((res) => setTimeout(res, 100));
     }
 
     if (data.sdp) {
@@ -144,10 +135,7 @@ export function useWebSocket(username) {
       if (data.sdp.type === "offer") {
         const answer = await peerConnection.current.createAnswer();
         await peerConnection.current.setLocalDescription(answer);
-
-        ws.current.send(
-          JSON.stringify({ type: "signal", sdp: peerConnection.current.localDescription })
-        );
+        ws.current.send(JSON.stringify({ type: "signal", sdp: peerConnection.current.localDescription }));
       }
     } else if (data.candidate) {
       try {
@@ -170,18 +158,14 @@ export function useWebSocket(username) {
       peerConnection.current.close();
       peerConnection.current = null;
     }
-    // NÃO parar localStream aqui para continuar mostrando a câmera local
-    // if (localStream.current) {
-    //   localStream.current.getTracks().forEach((t) => t.stop());
-    //   localStream.current = null;
-    // }
     setRemoteStream(null);
   }
 
   function stopLocalStream() {
-    if (localStream.current) {
-      localStream.current.getTracks().forEach(track => track.stop());
-      localStream.current = null;
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
+      setLocalStream(null);
     }
   }
 
@@ -190,7 +174,7 @@ export function useWebSocket(username) {
     partnerName,
     messages,
     sendMessage,
-    localStream: localStream.current,
+    localStream,
     remoteStream,
     isConnected: status === "matched",
     stopLocalStream,

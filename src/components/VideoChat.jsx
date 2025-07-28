@@ -11,22 +11,23 @@ export default function VideoChat({
   const videoRef = useRef(null);
 
   useEffect(() => {
-    if (type === "local" && videoRef.current) {
-      videoRef.current.srcObject = localStream || null;
-    }
-    if (type === "remote" && videoRef.current) {
-      videoRef.current.srcObject = remoteStream || null;
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+
+    const selectedStream = type === "local" ? localStream : remoteStream;
+    if (videoEl.srcObject !== selectedStream) {
+      videoEl.srcObject = selectedStream || null;
     }
   }, [localStream, remoteStream, type]);
 
   useEffect(() => {
-    if (type === "local" && localStream) {
-      const audioTrack = localStream.getAudioTracks()[0];
-      const videoTrack = localStream.getVideoTracks()[0];
+    if (type !== "local" || !localStream) return;
 
-      if (audioTrack) audioTrack.enabled = !isMuted;
-      if (videoTrack) videoTrack.enabled = cameraOn;
-    }
+    const audioTrack = localStream.getAudioTracks()[0];
+    const videoTrack = localStream.getVideoTracks()[0];
+
+    if (audioTrack) audioTrack.enabled = !isMuted;
+    if (videoTrack) videoTrack.enabled = cameraOn;
   }, [isMuted, cameraOn, localStream, type]);
 
   return (
@@ -38,9 +39,11 @@ export default function VideoChat({
       <video
         ref={videoRef}
         autoPlay
-        muted={type === "local"} // Somente muta o local para evitar eco
+        playsInline
+        muted={type === "local"} // evita eco no vídeo local
         className="w-full h-full object-cover bg-black rounded-lg"
       />
+      
       {type === "remote" && !remoteStream && (
         <div className="w-full h-full flex items-center justify-center bg-black text-gray-400 text-center text-lg rounded-lg">
           Ainda não há parceiro disponível para conversar...
