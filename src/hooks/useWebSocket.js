@@ -28,7 +28,7 @@ export function useWebSocket(username) {
 
     initLocalStream();
 
-    ws.current = new WebSocket("ws://localhost:3000");
+    ws.current = new WebSocket("wss://meet-strangers-back-end.onrender.com");
 
     ws.current.onopen = () => {
       console.log("WebSocket conectado");
