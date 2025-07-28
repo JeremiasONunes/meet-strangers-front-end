@@ -13,7 +13,7 @@ export function useWebSocket(username) {
   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
   useEffect(() => {
-    ws.current = new WebSocket("https://meet-strangers-back-end.onrender.com");
+    ws.current = new WebSocket("wss://meet-strangers-back-end.onrender.com");
 
     ws.current.onopen = () => {
       console.log("WebSocket conectado");
