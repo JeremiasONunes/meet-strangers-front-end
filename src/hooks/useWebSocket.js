@@ -15,7 +15,6 @@ export function useWebSocket(username) {
   useEffect(() => {
     ws.current = new WebSocket("wss://meet-strangers-back-end.onrender.com");
 
-
     ws.current.onopen = () => {
       console.log("WebSocket conectado");
       setStatus("waiting");
