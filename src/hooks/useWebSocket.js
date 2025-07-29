@@ -8,7 +8,7 @@ export function useWebSocket(username) {
 
   function connect() {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const wsUrl = `${protocol}://localhost:3000`;
+    const wsUrl = `${protocol}://meet-strangers-back-end.onrender.com`;
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
