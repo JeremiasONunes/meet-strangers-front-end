@@ -5,59 +5,98 @@ import { Link } from 'react-router-dom';
 export default function NameForm() {
   const [name, setName] = useState('');
   const [interests, setInterests] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const validateName = (name) => {
+    if (!name.trim()) return 'Nome é obrigatório';
+    if (name.trim().length < 2) return 'Nome deve ter pelo menos 2 caracteres';
+    if (name.trim().length > 30) return 'Nome deve ter no máximo 30 caracteres';
+    if (!/^[a-zA-Z0-9\sÀ-ÿ]+$/.test(name.trim())) return 'Nome contém caracteres inválidos';
+    return '';
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    localStorage.setItem('username', name);
-    localStorage.setItem('interests', interests);
+    
+    const nameError = validateName(name);
+    if (nameError) {
+      setError(nameError);
+      return;
+    }
+
+    setError('');
+    localStorage.setItem('username', name.trim());
+    localStorage.setItem('interests', interests.trim());
     navigate('/chat');
   };
 
+  const handleNameChange = (e) => {
+    setName(e.target.value);
+    if (error) setError('');
+  };
+
   return (
-    <>
     <form 
       onSubmit={handleSubmit} 
-      className="bg-[#0a0f2c] p-10 rounded-2xl shadow-2xl w-full max-w-md mx-auto space-y-6 animate-fade-in"
+      className="bg-black/40 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full space-y-6 border border-white/10"
     >
-      <h2 className="text-3xl font-semibold text-center text-white tracking-wide">
-        Bem-vindo ao <span className="text-blue-400">MeetStranger</span>
-      </h2>
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">
+          Começar Conversa
+        </h2>
+        <p className="text-gray-400 text-sm">
+          Digite seu nome para encontrar alguém para conversar
+        </p>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Digite seu nome"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-        className="w-full p-3 bg-[#1c223a] text-white placeholder-gray-400 border border-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
+      {error && (
+        <div className="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-2 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
 
-      <input
-        type="text"
-        placeholder="Seus interesses (ex: filmes, música...)"
-        value={interests}
-        onChange={(e) => setInterests(e.target.value)}
-        className="w-full p-3 bg-[#1c223a] text-white placeholder-gray-400 border border-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
+      <div className="space-y-4">
+        <div>
+          <input
+            type="text"
+            placeholder="Seu nome"
+            value={name}
+            onChange={handleNameChange}
+            maxLength={30}
+            className="w-full p-4 bg-white/10 text-white placeholder-white/60 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+          <div className="text-right text-xs text-gray-400 mt-1">
+            {name.length}/30
+          </div>
+        </div>
+
+        <input
+          type="text"
+          placeholder="Seus interesses (opcional)"
+          value={interests}
+          onChange={(e) => setInterests(e.target.value)}
+          maxLength={100}
+          className="w-full p-4 bg-white/10 text-white placeholder-white/60 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+        />
+      </div>
 
       <button 
         type="submit" 
-        className="w-full bg-blue-600 hover:bg-blue-700 transition-colors duration-300 text-white p-3 rounded-lg font-medium"
+        disabled={!name.trim()}
+        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white p-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02] disabled:hover:scale-100"
       >
-        Entrar no Chat
+        🚀 Entrar no Chat
       </button>
-      <div className="text-center mt-4">
-          <Link
-            to="/about"
-            className="text-blue-400 hover:text-blue-300 underline transition"
-          >
-            Sobre o MeetStranger
-          </Link>
-        </div>
+
+      <div className="text-center">
+        <Link
+          to="/about"
+          className="text-blue-400 hover:text-blue-300 text-sm underline transition"
+        >
+          Sobre o MeetStranger
+        </Link>
+      </div>
     </form>
-    {/* Link para a página Sobre */}
-        
-    </>
   );
 }

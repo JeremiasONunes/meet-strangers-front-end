@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-export default function ChatBox({ messages: propMessages = [], sendMessage }) {
+export default function ChatBox({ messages: propMessages = [], sendMessage, disabled = false }) {
   const username = localStorage.getItem("username") || "Você";
 
   const [messages, setMessages] = useState(propMessages);
@@ -30,8 +30,8 @@ export default function ChatBox({ messages: propMessages = [], sendMessage }) {
       {messages.map((msg, i) => (
         <div
           key={i}
-          className={`max-w-[80%] flex flex-col ${
-            msg.sender === username ? "self-end items-end" : "self-start items-start"
+          className={`max-w-[80%] flex flex-col animate-fade-in ${
+            msg.sender === username ? "self-end items-end message-right" : "self-start items-start message-left"
           }`}
         >
           {/* Nome acima da mensagem */}
@@ -41,10 +41,10 @@ export default function ChatBox({ messages: propMessages = [], sendMessage }) {
 
           {/* Caixa da mensagem */}
           <div
-            className={`px-4 py-2 text-sm rounded-2xl shadow transition-all ${
+            className={`px-4 py-2 text-sm rounded-2xl shadow-lg backdrop-blur-sm border transition-all hover:scale-[1.02] ${
               msg.sender === username
-                ? "bg-blue-600 text-white rounded-br-none"
-                : "bg-white/20 text-white rounded-bl-none"
+                ? "bg-blue-600/90 text-white rounded-br-none border-blue-500/50"
+                : "bg-white/20 text-white rounded-bl-none border-white/30"
             }`}
           >
             {msg.text}
@@ -60,14 +60,16 @@ export default function ChatBox({ messages: propMessages = [], sendMessage }) {
         type="text"
         value={newMessage}
         onChange={(e) => setNewMessage(e.target.value)}
-        placeholder="Digite sua mensagem..."
-        className="flex-1 bg-white/10 text-white placeholder-white/60 rounded-l-xl px-4 py-2 text-sm outline-none backdrop-blur-md border border-white/20"
+        placeholder={disabled ? "Aguardando conexão..." : "Digite sua mensagem..."}
+        disabled={disabled}
+        className="flex-1 bg-white/10 text-white placeholder-white/60 rounded-l-xl px-4 py-2 text-sm outline-none backdrop-blur-md border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
       />
       <button
         type="submit"
-        className="bg-blue-600 text-white px-5 py-2 rounded-r-xl hover:bg-blue-700 transition"
+        disabled={disabled || !newMessage.trim()}
+        className="bg-blue-600 text-white px-5 py-2 rounded-r-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
       >
-        Enviar
+        📤
       </button>
     </form>
   </div>
